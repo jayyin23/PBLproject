@@ -1,0 +1,122 @@
+古诗词赏析 MVP 需求文档（v1.0）
+
+1. 项目目标
+- 为用户提供古诗词的快速检索、基础信息展示、注释与译文、简要赏析和朗读播放，支持基础收藏与分享。
+- 首期聚焦轻量内容消费与检索体验，优先保证跨端可用与性能。
+
+2. MVP 范围
+- 作品列表/搜索：按作者、题目、关键词搜索；列表分页/下拉加载。
+- 作品详情：标题、作者、生平朝代、正文、注释、译文、简赏析、朗读音频播放。
+- 收藏：本地收藏（Storage），可在“我的收藏”查看与取消。
+- 分享：H5复制链接，小程序原生分享。
+- 基础缓存：详情数据短期缓存（内存 + Storage），减少重复请求。
+
+3. 目标平台
+- H5（移动端为主）
+- 微信小程序（mp-weixin）
+说明：使用 UniApp 通用能力，差异通过条件编译处理。
+
+4. 用户角色与核心用例
+- 普通用户：
+  - 搜索诗词 => 查看列表 => 进入详情 => 阅读注释/译文/赏析 => 播放朗读 => 收藏/分享
+  - 在“我的收藏”管理已收藏作品
+- 游客即可使用全部功能，无登录流程（MVP）。
+
+5. 页面与路由
+- 首页：pages/index/index
+  - 功能：搜索入口、推荐/最近查看列表
+- 搜索结果页：pages/search/index
+  - 功能：关键词搜索结果列表、筛选（作者/朝代）
+- 作品详情页：pages/poem/detail
+  - 功能：正文、注释、译文、赏析、音频播放、收藏/分享按钮
+- 我的收藏：pages/favorites/index
+  - 功能：已收藏作品列表、取消收藏
+
+6. 组件清单（示例）
+- PoemItem（作品列表项）：标题、作者、摘要；点击进入详情
+- SectionTabs（详情分段切换）：正文/注释/译文/赏析
+- AudioPlayer（朗读播放器）：播放/暂停/进度
+- EmptyState（空状态）：通用空态展示
+- SearchBar（搜索栏）：关键词输入、提交事件
+
+7. 数据模型与接口契约
+7.1 数据模型
+- PoemBrief
+  { id: string, title: string, author: string, dynasty: string, excerpt: string }
+- PoemDetail
+  { id: string, title: string, author: string, dynasty: string, content: string[], notes: string[], translation: string[], appreciation: string[], audioUrl?: string, source?: string }
+- SearchQuery
+  { keyword: string, author?: string, dynasty?: string, page?: number, pageSize?: number }
+
+7.2 API 契约（REST 示例）
+- GET /api/poems/search
+  请求：SearchQuery
+  响应：{ ok: true, data: { list: PoemBrief[], page: number, pageSize: number, total: number } }
+- GET /api/poems/{id}
+  响应：{ ok: true, data: PoemDetail }
+- GET /api/poems/recommend
+  响应：{ ok: true, data: PoemBrief[] }
+错误统一：{ ok: false, status: number, error: { message: string, code?: string } }
+
+8. 状态管理约定（遵循 cursorrules）
+- 全局 store（Pinia）：
+  - app：网络状态（loading）、最近查看列表 recentIds: string[]
+  - favorites：本地收藏 ids: string[]（持久化到 Storage：app:favorites）
+- 页面内部状态：查询参数、分页信息、当前详情 tab 等就地管理。
+- 缓存策略：
+  - 详情缓存：内存 Map<id, PoemDetail> + Storage key: poem:{id}（短期）
+  - 搜索结果仅内存（退出页面不持久化）
+
+9. 交互流程（关键路径）
+- 搜索流程：
+  输入关键词 => 触发请求 /api/poems/search => 展示列表 => 下拉加载更多
+- 详情流程：
+  点击列表项 => 请求 /api/poems/{id}（命中缓存则直接展示并异步刷新）=> Tab 切换显示不同内容 => 播放朗读
+- 收藏流程：
+  详情页点击收藏 => 更新 favorites ids + Storage => 我的收藏页读取并展示
+- 分享流程：
+  H5：复制链接（含 id）；小程序：使用转发能力（携带 id）
+
+10. 跨端注意事项
+- 样式：使用 rpx + Flex，避免 fixed 在复杂场景；scoped 样式。
+- 音频：H5使用 audio；小程序使用内置音频能力，API差异以条件编译处理。
+- 分享：H5复制文本，小程序走原生分享。
+- 路由：通过 pages.json 管理，不使用 Vue Router。
+- 条件编译：#ifdef H5 / #ifdef MP-WEIXIN 处理能力差异。
+
+11. 网络与错误处理
+- 统一封装 services/request.js（已提供），遵循 BaseURL、headers、错误码提示。
+- 超时：默认 15s；失败提示统一 showToast；401 预留登录跳转但 MVP 不实现登录。
+- 重试：MVP不自动重试；二期评估。
+
+12. 非功能性要求
+- 首屏加载时间：≤2s（H5），≤3s（小程序，视网络与设备）
+- 包体控制：按需加载组件与资源；音频不内置，走外链
+- 兼容：主流移动浏览器、小程序基础库最新版
+- 访问性：基本语义结构，按钮区域可点
+
+13. 埋点与日志（MVP可选）
+- 搜索提交、详情进入、音频播放点击、收藏/取消收藏
+- 错误上报：网络失败、接口异常（后端地址可配置后上线）
+
+14. 里程碑计划
+- M1（3 天）：页面骨架与路由、组件雏形（SearchBar/PoemItem/SectionTabs）、状态管理搭建
+- M2（4 天）：接入后端接口、详情页完整功能（注释/译文/赏析/音频）、收藏与分享
+- M3（2 天）：跨端适配与性能优化、埋点与错误处理完善、测试与小修
+- 验收：需求覆盖与用例跑通，关键指标达标
+
+15. 风险与边界
+- 内容来源：需后端提供合法数据与音频链接；版权归属须确认
+- 朗读音频稳定性：外链可用性与跨端兼容性
+- 搜索性能：海量数据需后端分页与检索优化
+
+16. 后续扩展（非 MVP）
+- 作者专题/生平与作品图谱
+- 主题/意境分类与推荐
+- 互动点评与标注（需审核）
+- 高级检索（韵脚/平仄/格律）
+
+附：与项目规则（cursorrules）一致的实现提示
+- 组件使用 script setup；路径使用 @ 别名（或相对路径）
+- 网络与状态遵循统一封装；Storage 命名规范：app:favorites、poem:{id}
+- 命令：H5开发 npm run dev:h5；小程序 npm run dev:weapp；构建同理

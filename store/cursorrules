@@ -1,0 +1,130 @@
+# UniApp 项目统一规范（cursorrules）
+
+本文件用于统一团队开发与自动化生成的规则，确保跨端一致性与可维护性。
+
+## 1. 技术栈约定
+- 框架：UniApp（Vue 3 + Composition API）
+- 语言：TypeScript（严格模式）
+- 组件：单文件组件 .vue（script setup 优先）
+- 路由：使用 pages.json 管理页面路由，不使用 Vue Router
+- 状态管理：Pinia（如需全局状态），页面本地状态使用组合式 API
+- 构建工具：Vite（基于 @dcloudio/vite-plugin-uni）
+- UI/样式：SCSS + Rpx（跨端统一），避免使用 px；遵循 BEM 或语义化命名
+- 目录别名：@ 指向项目根（见 tsconfig.json paths）
+
+## 2. 项目结构与命名规范
+- pages/：每个页面独立文件夹，如 pages/index/index.vue
+- components/：通用组件，命名采用 PascalCase（如 HelloWorld.vue）
+- types/：类型声明与全局 d.ts（如 shims-uni.d.ts）
+- store/：Pinia 仓库（如 store/user.ts）
+- assets/：静态资源（images、icons、fonts）
+- 命名：
+  - 文件与组件：PascalCase；状态与工具：camelCase
+  - 变量/函数：camelCase；常量：SCREAMING_SNAKE_CASE
+  - 事件/emit：小写短横线（如 "update:value"）
+
+## 3. 页面与组件开发流程
+- 新建页面：
+  1) 在 pages/ 下创建目录与 index.vue
+  2) 在 pages.json 注册页面路径与标题
+  3) 页面使用 <script setup lang="ts">，样式 <style lang="scss" scoped>
+- 新建组件：
+  1) components/ 下创建组件（PascalCase）
+  2) 使用 defineProps/defineEmits 定义接口
+  3) 组件必须具备 Props 类型、默认值、事件文档
+- 资源引用：
+  - 路径使用 @ 别名（如 @/components/HelloWorld.vue）
+  - 图片使用相对路径或 static 目录（注意打包平台差异）
+- 交互与可访问性：
+  - 表单组件统一封装；键盘与屏幕阅读器尽量兼容 H5
+  - 提示/确认统一使用封装的 UI 方法（如 showToast 封装）
+
+## 4. 跨端注意事项
+- 样式：
+  - 使用 rpx 以适配多端；避免使用 position: fixed 在 App 端复杂页面
+  - Flex 布局优先；避免依赖浏览器特性（如 :hover）
+- API：
+  - 统一使用 uni.* API；平台特定能力需封装并做平台判断（uni.getSystemInfoSync().platform）
+  - 权限/文件/蓝牙等需要在各端声明并进行能力检测
+- 组件与 DOM：
+  - 避免直接操作 DOM；使用 refs 与组件状态
+  - H5 特有能力须降级或禁用于非 H5 端
+- 性能：
+  - 控制首次渲染体积；按需加载组件与图片；避免频繁 setData
+- 兼容性：
+  - 使用条件编译 #ifdef/#ifndef 管理平台差异
+  - 尽量避免 CSS 高级选择器与不兼容属性
+
+## 5. 网络与状态管理约定
+- 网络层：
+  - 统一使用 request 封装（基于 uni.request 或 fetch 封装），拦截器处理 baseURL、headers、错误码
+  - 错误处理统一：服务端错误 => toast + 上报，业务错误 => 业务提示与回退
+  - 超时/重试策略可配置；文件上传统一封装 upload
+- 状态管理（Pinia）：
+  - 仅存放跨页面共享状态；页面内部状态就地管理
+  - Store 模块按领域拆分（如 user、app、settings）
+  - 持久化需明确策略（如 storage 存 token，敏感信息加密或不落地）
+- 缓存：
+  - 使用 uni.setStorage/uni.getStorage 封装；制定 key 命名规范（如 app:token）
+
+## 6. 构建与运行命令
+- HBuilderX：建议用于 App 真机调试与打包
+- CLI（示例，实际以项目 scripts 为准）：
+  - 开发（H5）：npx uni -p h5
+  - 开发（微信小程序）：npx uni -p mp-weixin
+  - 构建（H5）：npx uni build -p h5
+  - 构建（微信小程序）：npx uni build -p mp-weixin
+- 若使用 npm scripts（建议在 package.json 中添加）：
+  - "dev:h5": "uni -p h5"
+  - "dev:weapp": "uni -p mp-weixin"
+  - "build:h5": "uni build -p h5"
+  - "build:weapp": "uni build -p mp-weixin"
+- 说明：
+  - 本项目 tsconfig.json 在 store 目录，node_modules 也需在同级；编辑器需以 store 为根工作区
+  - 如未安装 CLI，先安装：npm i -D @dcloudio/vite-plugin-uni @uni-helper/uni-app-types
+
+## 7. 代码风格
+- 语法：
+  - 使用 Composition API，尽量使用 script setup
+  - 类型显式声明，避免 any；为 Props/返回值补充类型
+- 格式化：
+  - Prettier 统一；缩进 2 空格；单引号；分号禁用；末尾逗号尽量保留
+- ESLint（建议）：
+  - 使用 eslint-plugin-vue、@typescript-eslint；开启 no-unused-vars、no-implicit-any
+- 组件规范：
+  - 必须具备 props、emits、slots 文档；避免隐式副作用
+  - 样式使用 scoped；通用变量放置 uni.scss
+- 提交规范：
+  - 提交信息遵循 Conventional Commits（feat/fix/docs/refactor/chore…）
+  - PR 必须包含变更说明与测试要点
+
+## 8. AI 协作守则
+- 需求描述：
+  - 提供明确目标、输入/输出、平台目标（H5/小程序/App）、接口契约
+  - 指定文件位置与上下文，避免模糊改动
+- 生成约束：
+  - 严格遵循本文件规范；不得引入未安装依赖或与 UniApp 冲突的库
+  - 修改现有文件须使用最小化 diff；避免大范围重构
+- 安全：
+  - 不输出或记录任何敏感信息（token、密钥）；网络层统一走封装
+  - 禁止生成潜在恶意/破坏性脚本
+- 评审：
+  - 生成代码需自检类型与 lint；跨端差异必须标注说明
+  - 对不确定点先询问后变更，避免猜测
+
+## 9. 提示与最佳实践
+- 统一导入：
+  - 从 'vue' 导入组合式 API；组件路径使用 @ 别名
+- 资源与性能：
+  - 图片资源按端优化；使用懒加载与压缩；避免大图阻塞
+- 错误与日志：
+  - error 边界与统一日志上报；关键路径埋点
+- 文档：
+  - 每个页面与组件需具备 README 简要说明（用途、入参、事件）
+
+## 10. 变更流程
+- 任何新增规范或例外需评审并更新本文件版本，注明变更日期与影响范围
+- 自动化生成工具需读取本文件并按规范执行
+
+版本：v1.0
+维护：项目技术负责人

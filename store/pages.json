@@ -1,0 +1,68 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "首页"
+      }
+    },
+    {
+      "path": "pages/search/index",
+      "style": {
+        "navigationBarTitleText": "搜索"
+      }
+    },
+    {
+      "path": "pages/poem/detail",
+      "style": {
+        "navigationBarTitleText": "诗词详情"
+      }
+    },
+    {
+      "path": "pages/favorites/index",
+      "style": {
+        "navigationBarTitleText": "我的收藏"
+      }
+    },
+    {
+      "path": "pages/poem/homepage",
+      "style": {
+        "navigationBarTitleText": "诗词主页"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "uniapp-store",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#FFFFFF"
+  },
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#3cc51f",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/search/index",
+        "text": "搜索"
+      },
+      {
+        "pagePath": "pages/poem/detail",
+        "text": "诗词"
+      },
+      {
+        "pagePath": "pages/favorites/index",
+        "text": "收藏"
+      }
+    ]
+  },
+  "easycom": {
+    "autoscan": true,
+    "custom": {}
+  }
+}
