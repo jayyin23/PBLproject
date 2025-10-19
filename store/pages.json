@@ -1,68 +1,72 @@
 {
-  "pages": [
-    {
-      "path": "pages/index/index",
-      "style": {
-        "navigationBarTitleText": "首页"
-      }
+    "pages" : [
+        {
+            "path" : "pages/index/index",
+            "style" : {
+                "navigationBarTitleText" : "诗词首页"
+            }
+        },
+        {
+            "path" : "pages/search/index",
+            "style" : {
+                "navigationBarTitleText" : "搜索诗词"
+            }
+        },
+        {
+            "path" : "pages/poem/detail",
+            "style" : {
+                "navigationBarTitleText" : "诗词详情"
+            }
+        },
+        {
+            "path" : "pages/favorites/index",
+            "style" : {
+                "navigationBarTitleText" : "我的收藏"
+            }
+        },
+        {
+            "path" : "pages/poem/appreciation",
+            "style" : {
+                "navigationBarTitleText" : "诗词鉴赏"
+            }
+        },
+        {
+            "path" : "src/pages/poem/detail",
+            "style" : {}
+        },
+        {
+            "path" : "src/pages/poem/appreciation",
+            "style" : {}
+        }
+    ],
+    "globalStyle" : {
+        "navigationBarTextStyle" : "black",
+        "navigationBarTitleText" : "诗词宝库",
+        "navigationBarBackgroundColor" : "#FFFFFF",
+        "backgroundColor" : "#FFFFFF"
     },
-    {
-      "path": "pages/search/index",
-      "style": {
-        "navigationBarTitleText": "搜索"
-      }
+    "tabBar" : {
+        "color" : "#7A7E83",
+        "selectedColor" : "#8b7355",
+        "backgroundColor" : "#ffffff",
+        "borderStyle" : "black",
+        "list" : [
+            {
+                "pagePath" : "pages/index/index",
+                "text" : "首页"
+            },
+            {
+                "pagePath" : "pages/search/index",
+                "text" : "搜索"
+            },
+            {
+                "pagePath" : "pages/favorites/index",
+                "text" : "收藏"
+            }
+        ]
     },
-    {
-      "path": "pages/poem/detail",
-      "style": {
-        "navigationBarTitleText": "诗词详情"
-      }
-    },
-    {
-      "path": "pages/favorites/index",
-      "style": {
-        "navigationBarTitleText": "我的收藏"
-      }
-    },
-    {
-      "path": "pages/poem/homepage",
-      "style": {
-        "navigationBarTitleText": "诗词主页"
-      }
+    "easycom" : {
+        "autoscan" : true,
+        "custom" : {}
     }
-  ],
-  "globalStyle": {
-    "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "uniapp-store",
-    "navigationBarBackgroundColor": "#FFFFFF",
-    "backgroundColor": "#FFFFFF"
-  },
-  "tabBar": {
-    "color": "#7A7E83",
-    "selectedColor": "#3cc51f",
-    "backgroundColor": "#ffffff",
-    "borderStyle": "black",
-    "list": [
-      {
-        "pagePath": "pages/index/index",
-        "text": "首页"
-      },
-      {
-        "pagePath": "pages/search/index",
-        "text": "搜索"
-      },
-      {
-        "pagePath": "pages/poem/detail",
-        "text": "诗词"
-      },
-      {
-        "pagePath": "pages/favorites/index",
-        "text": "收藏"
-      }
-    ]
-  },
-  "easycom": {
-    "autoscan": true,
-    "custom": {}
-  }
 }

@@ -1,0 +1,110 @@
+{
+  "name": "DeepSeek诗词AI助手",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "poetry-chat",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-1",
+      "name": "Webhook触发器",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.first().json;\\nconst userMessage = inputData.chatInput || inputData.message || '';\\n\\nconst deepseekRequest = {\\n  model: \\\"deepseek-chat\\\",\\n  messages: [\\n    {\\n      role: \\\"system\\\",\\n      content: \\\"你是一个专业的诗词AI助手，帮助用户了解诗词、作者、创作背景等信息。请用中文回答，语言亲切自然。\\\"\\n    },\\n    {\\n      role: \\\"user\\\",\\n      content: userMessage\\n    }\\n  ],\\n  max_tokens: 1000,\\n  temperature: 0.7\\n};\\n\\nreturn [{ json: deepseekRequest }];"
+      },
+      "id": "code-1",
+      "name": "处理用户输入",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "url": "https://api.deepseek.com/v1/chat/completions",
+        "options": {},
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 你的DeepSeek-API密钥"
+            },
+            {
+              "name": "Content-Type", 
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendQuery": false,
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ $json }}",
+        "method": "POST"
+      },
+      "id": "http-request-1",
+      "name": "调用DeepSeek API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiResponse = $input.first().json;\\nlet reply = '';\\nif (aiResponse.choices && aiResponse.choices.length > 0) {\\n  reply = aiResponse.choices[0].message.content;\\n} else {\\n  reply = '抱歉，我暂时无法回答这个问题。';\\n}\\n\\n// 直接返回响应，不使用HTTP Response节点\\nconst response = {\\n  reply: reply,\\n  timestamp: new Date().toISOString()\\n};\\n\\n// 使用Webhook的响应功能\\nreturn [{ json: response }];"
+      },
+      "id": "code-2",
+      "name": "处理AI响应并返回",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook触发器": {
+      "main": [
+        [
+          {
+            "node": "处理用户输入",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "处理用户输入": {
+      "main": [
+        [
+          {
+            "node": "调用DeepSeek API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "调用DeepSeek API": {
+      "main": [
+        [
+          {
+            "node": "处理AI响应并返回",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "triggerCount": 0,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}

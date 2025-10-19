@@ -1,0 +1,121 @@
+{
+  "name": "诗词AI聊天助手",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "poetry-chat",
+        "responseMode": "responseNode",
+        "responseCode": 200,
+        "options": {}
+      },
+      "id": "webhook-1",
+      "name": "Webhook触发器",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 处理输入数据\\nconst inputData = $input.first().json;\\n\\n// 提取用户消息\\nconst userMessage = inputData.chatInput || inputData.message || inputData.input || inputData.prompt || '';\\n\\n// 构建AI请求\\nconst aiRequest = {\\n  messages: [\\n    {\\n      role: \\\"system\\\",\\n      content: \\\"你是一个专业的诗词AI助手，具备以下能力：\\\\n1. 诗词解析：分析诗词的意境、修辞手法、创作背景\\\\n2. 作者介绍：提供诗人的生平、创作风格、代表作品\\\\n3. 朝代知识：讲解不同朝代的诗词特点和文化背景\\\\n4. 创作指导：帮助用户创作诗词，提供修改建议\\\\n5. 文化解读：解释诗词中的典故、文化内涵\\\\n\\\\n请用中文回答，语言亲切自然，富有文化底蕴。\\\"\\n    },\\n    {\\n      role: \\\"user\\\",\\n      content: userMessage\\n    }\\n  ],\\n  max_tokens: 1000,\\n  temperature: 0.7\\n};\\n\\nreturn [{ json: aiRequest }];"
+      },
+      "id": "code-1",
+      "name": "预处理用户输入",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "options": {
+          "maxTokens": 1000,
+          "temperature": 0.7
+        }
+      },
+      "id": "openai-1",
+      "name": "OpenAI GPT-4",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "credentials": {
+        "openAiApi": "你的OpenAI API密钥"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 处理AI响应\\nconst aiResponse = $input.first().json;\\n\\n// 提取回复内容\\nlet reply = '';\\nif (aiResponse.choices && aiResponse.choices.length > 0) {\\n  reply = aiResponse.choices[0].message.content;\\n} else if (aiResponse.content) {\\n  reply = aiResponse.content;\\n} else {\\n  reply = '抱歉，我暂时无法回答这个问题。';\\n}\\n\\n// 构建响应格式\\nconst response = {\\n  reply: reply,\\n  timestamp: new Date().toISOString(),\\n  sessionId: $input.first().json.sessionId || 'default'\\n};\\n\\nreturn [{ json: response }];"
+      },
+      "id": "code-2",
+      "name": "处理AI响应",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "responseCode": 200,
+        "options": {},
+        "responseHeaders": "{\\n  \\\"Content-Type\\\": \\\"application/json\\\",\\n  \\\"Access-Control-Allow-Origin\\\": \\\"*\\\",\\n  \\\"Access-Control-Allow-Methods\\\": \\\"POST, GET, OPTIONS\\\",\\n  \\\"Access-Control-Allow-Headers\\\": \\\"Content-Type\\\"\\n}"
+      },
+      "id": "http-response-1",
+      "name": "HTTP响应",
+      "type": "n8n-nodes-base.httpResponse",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Webhook触发器": {
+      "main": [
+        [
+          {
+            "node": "预处理用户输入",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "预处理用户输入": {
+      "main": [
+        [
+          {
+            "node": "OpenAI GPT-4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI GPT-4": {
+      "main": [
+        [
+          {
+            "node": "处理AI响应",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "处理AI响应": {
+      "main": [
+        [
+          {
+            "node": "HTTP响应",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "triggerCount": 0,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}

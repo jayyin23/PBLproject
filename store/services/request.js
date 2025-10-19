@@ -1,80 +1,60 @@
-/**
- * 统一请求封装（基于 uni.request）
- * - baseURL、headers、错误码处理
- * - get/post 简化方法
- */
-const BASE_URL = ''; // TODO: 配置你的后端地址
+// 请求封装
+const BASE_URL = 'http://localhost:3000'
 
-function mergeUrl(url) {
-  if (!url.startsWith('http')) return `${BASE_URL}${url}`;
-  return url;
-}
-
-export async function http(opts) {
-  const { url, method = 'GET', data, headers } = opts;
-  const token = tryGetToken();
-
-  const finalHeaders = {
-    'Content-Type': 'application/json',
-    ...(headers || {}),
-  };
-  if (token) finalHeaders['Authorization'] = `Bearer ${token}`;
-
+export const get = (url, data = {}) => {
   return new Promise((resolve, reject) => {
     uni.request({
-      url: mergeUrl(url),
-      method,
+      url: BASE_URL + url,
       data,
-      header: finalHeaders,
-      timeout: opts.timeout ?? 15000,
-      success(res) {
-        const status = res.statusCode || 0;
-        const body = res.data;
-        if (status >= 200 && status < 300) {
-          resolve({ ok: true, status, data: body });
-        } else {
-          handleError(status, body);
-          resolve({ ok: false, status, error: body });
-        }
+      method: 'GET',
+      success: (res) => {
+        resolve(res.data)
       },
-      fail(err) {
-        handleError(-1, err);
-        reject({ ok: false, status: -1, error: err });
-      },
-      complete() {
-        // 可在此做统一 loading 结束处理
-      },
-    });
-  });
+      fail: (err) => {
+        reject(err)
+      }
+    })
+  })
 }
 
-export const get = (url, params, headers) =>
-  http({ url, method: 'GET', data: params, headers });
+export const post = (url, data = {}) => {
+  return new Promise((resolve, reject) => {
+    uni.request({
+      url: BASE_URL + url,
+      data,
+      method: 'POST',
+      header: {
+        'Content-Type': 'application/json'
+      },
+      success: (res) => {
+        resolve(res.data)
+      },
+      fail: (err) => {
+        reject(err)
+      }
+    })
+  })
+}
 
-export const post = (url, data, headers) =>
-  http({ url, method: 'POST', data, headers });
-
-function tryGetToken() {
-  try {
-    const v = uni.getStorageSync('app:token');
-    return typeof v === 'string' ? v : null;
-  } catch {
-    return null;
+// 示例API调用
+export const poemApi = {
+  // 搜索诗词
+  search: (keyword, page = 1, pageSize = 20) => {
+    return get('/api/poems/search', { keyword, page, pageSize })
+  },
+  
+  // 获取推荐诗词
+  recommend: (count = 10) => {
+    return get('/api/poems/recommend', { count })
+  },
+  
+  // 获取诗词详情
+  getDetail: (id) => {
+    return get(`/api/poems/${id}`)
+  },
+  
+  // 获取分类诗词
+  getByCategory: (category, page = 1, pageSize = 20) => {
+    return get('/api/poems/category', { category, page, pageSize })
   }
-}
-
-function handleError(status, payload) {
-  const msg = normalizeErrorMessage(status, payload);
-  try {
-    uni.showToast({ title: msg, icon: 'none' });
-  } catch {}
-  // TODO: 将错误上报到日志系统
-}
-
-function normalizeErrorMessage(status, payload) {
-  if (status === -1) return '网络连接失败，请稍后重试';
-  if (status === 401) return '登录已过期，请重新登录';
-  if (status >= 500) return '服务器异常，请稍后再试';
-  if (payload && typeof payload === 'object' && payload.message) return String(payload.message);
-  return `请求失败(${status})`;
 }
